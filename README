@@ -1,0 +1,27 @@
+OpenSprinkler Pi Web Monitor/Control Interface
+==============================================
+
+Based on the sample code from original OpenSprinkler Pi code base, this program
+provide more standardized web server and modern UI.
+
+**Objectives:**
+
+* Make the application more usable/usefull
+* Integrate modern UI with mobile support
+* Combine manual and Google calendar controls int to one application
+* Package for Debian based distributions
+* Release under GPLv3 or later free software license
+
+Following sample codes will be used (as fork or influence) for the
+project under their respective license.
+
+**OpenSprinkler Pi**
+
+* https://github.com/rayshobby/opensprinkler
+*
+
+**A simple unix/linux daemon in Python**
+
+* http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
+* Public Domain
+
