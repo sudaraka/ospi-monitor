@@ -23,8 +23,9 @@
 # http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 #
 
-import sys
+import sys, logging
 from ospim.daemon import *
+from ospim.config import *
 
 
 def exit_usage():
@@ -43,13 +44,27 @@ if '__main__' == __name__:
   if 2 > len(sys.argv):
     exit_usage()
 
+  # Initialize logging
+  try:
+    logging.basicConfig(
+      filename=ospim_conf.get('daemon', 'log_file'),
+      format='%(asctime)s [%(levelname)s] %(message)s',
+      datefmt='%Y-%m-%d %I:%M:%S %p',
+      level=logging.INFO)
+  except IOError:
+    print 'Failed to open log file: %s' % ospim_conf.get('daemon', 'log_file')
+    sys.exit(1)
+
   daemon = OSPiMDaemon()
 
   if 'start' == sys.argv[1]:
+    logging.info('ospimd starting...')
     daemon.start()
   elif 'stop' == sys.argv[1]:
+    logging.info('ospimd stopping...')
     daemon.stop()
   elif 'restart' == sys.argv[1]:
+    logging.info('ospimd restarting...')
     daemon.restart()
   else:
     exit_usage()

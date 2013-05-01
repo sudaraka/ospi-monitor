@@ -22,7 +22,7 @@
 # http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 #
 
-import sys, time, atexit
+import sys, time, atexit, logging
 from signal import SIGTERM
 from BaseHTTPServer import HTTPServer
 from .config import *
@@ -69,11 +69,14 @@ class OSPiMDaemon:
       pid = None
 
     if pid:
-      sys.stderr.write('ospimd already running or orphan pid file %s exists.\n' % self.pid_file)
+      logging.warning('PID file %s already exists.' % self.pid_file)
+      logging.warning('Start procedure aborted')
+      sys.stderr.write('ospimd already running.\n')
       sys.exit(1)
 
     # Call subroutines to fork daemon process and run daemon code
     self._fork_daemon()
+    logging.info('ospimd started!')
     self.run()
 
 
@@ -89,7 +92,8 @@ class OSPiMDaemon:
         # Exit first parent
         sys.exit(0)
     except OSError, e:
-      sys.stderr.write('fork #1 failed: %d (%s)\n' % (e.errno, e.strerror))
+      logging.error('Error on fork #1: %d - %s' % (e.errno, e.strerror))
+      sys.stderr.write('Failed to start daemon. See log file for details.')
       sys.exit(1)
 
     # Adjust environment
@@ -103,7 +107,8 @@ class OSPiMDaemon:
         # Exit second parent
         sys.exit(0)
     except OSError, e:
-      sys.stderr.write('fork #2 failed: %d (%s)\n' % (e.errno, e.strerror))
+      logging.error('Error on fork #2: %d - %s' % (e.errno, e.strerror))
+      sys.stderr.write('Failed to start daemon. See log file for details.')
       sys.exit(1)
 
     # Redirect standard file descriptors
@@ -129,7 +134,10 @@ class OSPiMDaemon:
     Remove the pid file from disk
     """
 
-    os.remove(self.pid_file)
+    try:
+      os.remove(self.pid_file)
+    except Exception, e:
+      logging.warning('Failed to remove PID file.')
 
 
   def stop(self):
@@ -146,7 +154,9 @@ class OSPiMDaemon:
       pid = None
 
     if not pid:
-      sys.stderr.write('ospimd is not running or pid file %s is missing.\n' % self.pid_file)
+      logging.warning('Could not locate PID file %s during the stop procedure' % self.pid_file)
+      logging.warning('Stop procedure aborted')
+      sys.stderr.write('ospimd is not running.\n')
 
       # return here instead of exit so we allow the execution to continue for
       # a restart
@@ -164,8 +174,12 @@ class OSPiMDaemon:
         if os.path.exists(self.pid_file):
           os.remove(self.pid_file)
       else:
+        logging.error(err)
+        sys.stderr.write('Stop procedure aborted.\n')
         print err
         sys.exit(1)
+
+    logging.info('ospimd stopped!')
 
   def restart(self):
     """
@@ -190,7 +204,7 @@ class OSPiMDaemon:
       )
       httpd = HTTPServer(server_address, OSPiMRequestHandler)
     except Exception, e:
-      sys.stderr.write('Failed to create HTTP Server[%d]: %s\n' % (e.errno, e.strerror))
+      logging.error('Failed to create HTTP Server[%d]: %s\n' % (e.errno, e.strerror))
       sys.exit(1)
 
     while 1:
