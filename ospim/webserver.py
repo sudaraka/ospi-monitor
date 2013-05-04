@@ -22,9 +22,12 @@
 # https://github.com/rayshobby/opensprinkler
 #
 
-import sys, logging, mimetypes
+import sys, logging, mimetypes, random
 from BaseHTTPServer import BaseHTTPRequestHandler
 from .config import *
+from .zones import *
+from cgi import parse_header, parse_multipart, parse_qs
+
 
 # Make sure this script doesn't get executed directly
 if '__main__' == __name__:
@@ -40,16 +43,102 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
   root = ospim_conf.get('server', 'root_directory')
 
 
-  # Override version string use in "Server" HTTP header
   def version_string(self):
+    """ Override version string use in "Server" HTTP header to be empty """
     return ''
+
+
+  def do_POST(self):
+    """
+    Handle HTTP POST requests
+
+    Treat all POST requests as requests do some server side processing and
+    return the result.
+    """
+
+    try:
+      # Strip out leading slash to avoid blank command name after split by '/'
+      if '/' == self.path[0]:
+        self.path = self.path[1:]
+
+      # POST uri must contain the command
+      if 0 == len(self.path):
+        self._send_403()
+        return
+
+      # command is the first block (directory) of the Uri
+      command = self.path.split('/', 1)
+
+      # Load POST variables (query data) into 'post' dictionary
+      post = {}
+      ctype = 'application/x-www-urlencoded'
+      pdict = None
+
+      if 'content-type' in self.headers:
+        ctype, pdict = parse_header(self.headers['content-type'])
+
+      if 'multipart/form-data' == ctype:
+        post = parse_multipart(self.rfile, pdict)
+      elif 'application/x-www-form-urlencoded' == ctype:
+        length = int(self.headers.getheader('content-length'))
+        post = parse_qs(self.rfile.read(length), keep_blank_values = 1)
+
+      # Process commands
+      command[0] = command[0].lower()
+      z = OSPiMZones();
+
+      if 'get-zones' == command[0]:
+        # Send complete zone data
+
+        self._start_json_response()
+        self._send(z.get_json(), None)
+
+      elif 'save-zone-count' == command[0]:
+        # Update the zone count
+
+        self._start_json_response()
+
+        if 'count' not in post:
+          logging.error('/save-zone-count called without count parameter')
+          self._send(json.dumps({"error": 1, "desc": "'count' parameter was not provided. Nothing to update."}))
+          return
+
+        try:
+          zone_count = int(post['count'][0])
+        except:
+          zone_count = 1
+
+        z.set_count(zone_count)
+        self._send(json.dumps({"error": 0, "desc": "Ok"}))
+
+      elif 'save-zone-names' == command[0]:
+        # Update zone names
+
+        self._start_json_response()
+
+        if 'zone_name' not in post:
+          logging.error('/save-zone-names called without zone_name parameter list')
+          self._send(json.dumps({"error": 1, "desc": "'zone_name' parameter list was not provided. Nothing to update."}))
+          return
+
+        z.set_names(post['zone_name'])
+        self._send(json.dumps({"error": 0, "desc": "Ok"}))
+
+      else:
+        self._send_404('command "%s"' % command[0])
+
+    except Exception, e:
+      logging.error('Error handling request %s' % self.path)
+      logging.error(str(e))
+      self._report_error(str(e))
+
 
 
   def do_GET(self):
     """
     Handle HTTP GET requests
 
-    Treat all GET request as requests for a static file to be served off the
+    Treat all GET requests as requests for a static file to be served off the
     disk.
     """
 
@@ -83,6 +172,7 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
       self._send_404(self.path)
     except Exception, e:
       logging.error('Error handling request %s' % self.path)
+      logging.error(str(e))
       self._report_error(str(e))
 
 
@@ -151,7 +241,21 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
     if response:
       self.send_response(response)
 
+    self.send_header('Cache-Control', 'max-age=3600, no-cache, must-revalidate')
+    self.send_header('Etag', random.randrange(100000, 999999))
+    self.send_header('Expires', self.date_time_string())
+    self.send_header('Last-Modified', self.date_time_string())
     self.end_headers()
 
     self.wfile.write(document)
+
+
+  def _start_json_response(self):
+    """
+    Send HTTP 200 header and content type for JSON that most of the responses
+    of this server use.
+    """
+
+    self.send_response(200)
+    self.send_header('Content-type', 'application/json')
 
