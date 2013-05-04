@@ -1,0 +1,13 @@
+#div_loading_failed,
+#div_save_failed,
+#div_save_success,
+#div_settings_content {
+	display: none;
+}
+
+#div_zone_name_list {
+}
+
+#div_zone_name_list .add-on {
+	width: 30%;
+}
