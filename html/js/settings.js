@@ -73,7 +73,7 @@ populate = function() {
 			.append(
 				$('<input>')
 					.attr({'type': 'text', 'name': 'zone_name'})
-					.addClass('input-medium')
+					.addClass('input-small')
 					.val(zone_info.zone[i].name)
 			)
 			.appendTo($('#div_zone_name_list'))
