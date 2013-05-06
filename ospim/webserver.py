@@ -23,7 +23,7 @@
 #
 
 import sys, logging, mimetypes, random
-from BaseHTTPServer import BaseHTTPRequestHandler
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from .config import *
 from .zones import *
 from cgi import parse_header, parse_multipart, parse_qs
@@ -34,14 +34,33 @@ if '__main__' == __name__:
   sys.exit(1)
 
 
+class OSPiMHTTPServer(HTTPServer):
+  """
+  This wrapper class for HTTPServer is used to maintain a single instance of
+  GPIO handler during the life cycle of the server.
+  """
+
+  # GPIO communication handler
+  _gpio = None
+
+  # Zone data object
+  _zone = OSPiMZones();
+
+  def set_gpio_handler(self, gpio_handler):
+    """ Set GPIO handler object """
+
+    self._gpio = gpio_handler
+
+
+
 class OSPiMRequestHandler(BaseHTTPRequestHandler):
   """
   OSPi Monitor daemon (ospimd) will forward all the HTTP request handling to
   this class.
   """
 
-  root = ospim_conf.get('server', 'root_directory')
-
+  # Web root directory location
+  _root = ospim_conf.get('server', 'root_directory')
 
   def version_string(self):
     """ Override version string use in "Server" HTTP header to be empty """
@@ -85,13 +104,12 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
 
       # Process commands
       command[0] = command[0].lower()
-      z = OSPiMZones();
 
       if 'get-zones' == command[0]:
         # Send complete zone data
 
         self._start_json_response()
-        self._send(z.get_json(), None)
+        self._send(self.server._zone.get_json(), None)
 
       elif 'save-zone-count' == command[0]:
         # Update the zone count
@@ -108,7 +126,7 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
         except:
           zone_count = 1
 
-        z.set_count(zone_count)
+        self.server._zone.set_count(zone_count)
         self._send(json.dumps({"error": 0, "desc": "Ok"}))
 
       elif 'save-zone-names' == command[0]:
@@ -121,7 +139,7 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
           self._send(json.dumps({"error": 1, "desc": "'zone_name' parameter list was not provided. Nothing to update."}))
           return
 
-        z.set_names(post['zone_name'])
+        self.server._zone.set_names(post['zone_name'])
         self._send(json.dumps({"error": 0, "desc": "Ok"}))
 
       else:
@@ -143,28 +161,28 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
     """
 
     try:
-      # Check for a valid web root
-      if not os.path.isdir(self.root):
+      # Check for a valid web _root
+      if not os.path.isdir(self._root):
         self._send_404(self.path)
         return
 
-      if 0 < len(self.root) and '/' == self.root[-1]:
-        self.root = self.root[:-1]
+      if 0 < len(self._root) and '/' == self._root[-1]:
+        self._root = self._root[:-1]
 
       # When request uri is a directory, append index files names
-      if os.path.isdir(self.root + self.path):
+      if os.path.isdir(self._root + self.path):
         if not self._get_index():
           self._send_403()
           return
 
-      f = open(self.root + self.path)
+      f = open(self._root + self.path)
       output = f.read();
       f.close()
 
       self.send_response(200)
       self.send_header(
         'Content-type',
-        mimetypes.guess_type(self.root + self.path)[0]
+        mimetypes.guess_type(self._root + self.path)[0]
       )
 
       self._send(output, None)
@@ -184,11 +202,11 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
     Priority: index.html > index.htm
     """
 
-    if os.path.isfile(self.root + self.path + 'index.html'):
+    if os.path.isfile(self._root + self.path + 'index.html'):
       self.path += 'index.html'
       return True
 
-    if os.path.isfile(self.root + self.path + 'index.htm'):
+    if os.path.isfile(self._root + self.path + 'index.htm'):
       self.path += 'index.htm'
       return True
 
@@ -199,7 +217,7 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
     self.send_response(403)
 
     try:
-      f = open(self.root + '/403.html')
+      f = open(self._root + '/403.html')
       text_403 = f.read()
       f.close()
       text_403 = self.path
@@ -216,7 +234,7 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
     self.send_response(404)
 
     try:
-      f = open(self.root + '/404.html')
+      f = open(self._root + '/404.html')
       text_404 = f.read()
       f.close()
 

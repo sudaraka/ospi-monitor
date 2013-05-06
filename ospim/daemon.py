@@ -22,11 +22,11 @@
 # http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 #
 
-import sys, time, atexit, logging
-from signal import SIGTERM
-from BaseHTTPServer import HTTPServer
+import sys, time, atexit, logging, signal
 from .config import *
 from .webserver import *
+from .gpio import *
+from .zones import *
 
 # Make sure this script doesn't get executed directly
 if '__main__' == __name__:
@@ -37,6 +37,11 @@ class OSPiMDaemon:
   """
   OSPi Monitor daemon
   """
+
+
+  # GPIO communication handler
+  _gpio = None
+
 
   def __init__(self):
     """
@@ -124,15 +129,31 @@ class OSPiMDaemon:
     os.dup2(se.fileno(), sys.stderr.fileno())
 
     # Create pid file
-    atexit.register(self._remove_pid_file)
     pid = str(os.getpid())
     file(self.pid_file, 'w+').write('%s\n' % pid)
 
+    # Setup termination handlers
+    atexit.register(self.cleanup_instance)
+    signal.signal(signal.SIGTERM, self.sigterm_handler)
 
-  def _remove_pid_file(self):
+
+  def sigterm_handler(self, signum, frame):
+    """ Catch the SIGTERM to exit gracefully by triggering atexit. """
+
+    sys.exit(0)
+
+
+  def cleanup_instance(self):
     """
-    Remove the pid file from disk
+    Cleanup GPIO and remove the pid file from disk
     """
+
+    if None != self._gpio:
+      # Turn off all zones
+      z = OSPiMZones()
+      bits = [0] * z._data['zone_count']
+
+      self._gpio.close(bits)
 
     try:
       os.remove(self.pid_file)
@@ -165,7 +186,7 @@ class OSPiMDaemon:
     # Terminate the process
     try:
       while 1:
-        os.kill(pid, SIGTERM)
+        os.kill(pid, signal.SIGTERM)
         time.sleep(.1)
     except OSError, e:
       e = str(e)
@@ -202,7 +223,11 @@ class OSPiMDaemon:
         ospim_conf.get('server', 'address'),
         ospim_conf.getint('server', 'port')
       )
-      httpd = HTTPServer(server_address, OSPiMRequestHandler)
+
+      httpd = OSPiMHTTPServer(server_address, OSPiMRequestHandler)
+      self._gpio = OSPiMGPIO()
+
+      httpd.set_gpio_handler(self._gpio)
     except Exception, e:
       logging.error('Failed to create HTTP Server[%d]: %s\n' % (e.errno, e.strerror))
       sys.exit(1)
