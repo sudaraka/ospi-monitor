@@ -35,3 +35,26 @@ root_directory = /var/www/ospim
 # Location of the zone information file
 zone_file = /var/lib/ospim/zones.json
 
+
+# GPIO settings for RaspberryPi interfacing with the OpenSprinkler shift
+# register.
+#
+# RaspberryPi GPIO pin layout details:
+#   http://elinux.org/Rpi_Low-level_peripherals#Introduction
+[gpio]
+
+pin_clk = 4
+
+pin_noe = 17
+
+pin_lat = 22
+
+# Pin 13 (Bottom row 7th pin) on RaspberryPi has different address/name in the
+# Model B rev1 and rev2.
+# Rev1: 21
+# Rev2: 27
+#
+# Reference:
+#   http://elinux.org/Rpi_Low-level_peripherals#Introduction
+pin_dat = 21
+
