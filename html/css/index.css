@@ -1,0 +1,33 @@
+
+#div_update_failed,
+#div_update_success,
+#div_zone_buttons {
+	display: none;
+}
+
+#div_zone_buttons button {
+	font-weight: bold;
+}
+
+[class*="span"] {
+	margin-bottom: 15px;
+}
+
+@media (min-width: 1200px) {
+	.span2 {
+		height:170px;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 979px) {
+	.span2 {
+		height:104px;
+	}
+}
+
+@media (min-width: 980px) and (max-width: 1199px) {
+	.span2 {
+		height:140px;
+	}
+}
+

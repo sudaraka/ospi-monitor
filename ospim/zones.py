@@ -108,6 +108,21 @@ class OSPiMZones:
       self.write()
 
 
+  def set_status(self, zone_id, status):
+    """
+    Update the current status (on/off) of the given zone.
+
+    Status that keep in this data structure merely a representation of what the
+    hardware status is. Hardware needs to be update separately.
+    """
+
+    try:
+      self._data['zone'][zone_id]['status'] = status
+      self.write()
+    except Exception, e:
+      logging.error('[zone:set_status]: %s' % str(e))
+
+
   def write(self):
     """ Write the current memory snapshot of zone data in to disk file """
 

@@ -142,6 +142,44 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
         self.server._zone.set_names(post['zone_name'])
         self._send(json.dumps({"error": 0, "desc": "Ok"}))
 
+      elif 'update-zone-status' == command[0]:
+        # Update the zone status
+
+        self._start_json_response()
+
+        if 'zone' not in post:
+          logging.error('/updat-zone-status called without zone parameter')
+          self._send(json.dumps({"error": 1, "desc": "'zone' (id) parameter was not provided. Nothing to update."}))
+          return
+
+        try:
+          zone_id = int(post['zone'][0])
+          zone_count = self.server._zone._data['zone_count']
+
+          if 0 > zone_id or zone_count <= zone_id:
+            raise Exception('Zone id out of range')
+        except:
+          logging.error('/updat-zone-status called with invalid zone (id) parameter')
+          self._send(json.dumps({"error": 2, "desc": ("Given zone id (%s) doesn\'t exists. Nothing to update." % post['zone'][0])}))
+          return
+
+        if 'status' not in post:
+          logging.error('/updat-zone-status called without status parameter')
+          self._send(json.dumps({"error": 3, "desc": "'status' parameter was not provided. Nothing to update."}))
+          return
+
+        try:
+          new_status = int(post['status'][0])
+          if 0 != new_status:
+            new_status = 1
+        except:
+          new_status = 0
+
+        self.server._zone.set_status(zone_id, new_status)
+        self.server._gpio.shift_register_write()
+
+        self._send(json.dumps({"error": 0, "desc": "Ok"}))
+
       else:
         self._send_404('command "%s"' % command[0])
 

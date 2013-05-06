@@ -5,6 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="css/ospim.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="css/index.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap-responsive.css" />
 </head>
 <body>
@@ -39,10 +40,25 @@
 	</div>
 
 	<div class="container">
+		<div id="div_loading"><div class="icon-refresh"></div> loading&hellip;</div>
+
+		<div id="div_update_failed" class="alert alert-error">
+			<button type="button" class="close" data-dismiss="alert" >&times;</button>
+			<h4>Failed to update zone status</h4>
+			<span class="message"></span>
+		</div>
+		<div id="div_update_success" class="alert alert-success">
+			<button type="button" class="close" data-dismiss="alert" >&times;</button>
+			<h4>Zone status successfully updated!</h4>
+		</div>
+
+		<div id="div_zone_buttons" class="row"></div>
 	</div>
 
 	<script type="text/javascript" language="JavaScript" src="js/jquery.js"></script>
 	<script type="text/javascript" language="JavaScript" src="js/bootstrap.js"></script>
+	<script type="text/javascript" language="JavaScript" src="js/common.js"></script>
+	<script type="text/javascript" language="JavaScript" src="js/index.js"></script>
 </body>
 </html>
 
