@@ -263,7 +263,7 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
       self.send_header('Content-type', 'text/html; encoding=utf-8;')
     except:
       self.send_header('Content-type', 'text/plain; encoding=utf-8;')
-      text_403 = '403 Fobidden\nUri: %s' % uri
+      text_403 = '403 Fobidden'
 
     self._send(text_403, None)
 
