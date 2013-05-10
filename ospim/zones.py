@@ -71,8 +71,11 @@ class OSPiMZones:
       self._data = json.loads(f.read())
       f.close()
     except Exception, e:
-      logging.warning('Failed to load zone settings from %s' % self._data_file)
-      logging.error(str(e))
+      #logging.warning('Falling back to default zone data.')
+
+      # Call set_count with the default value to make it generate zone data set
+      # and save the file.
+      self.set_count(self._data['zone_count'])
 
 
   def set_count(self, count):
