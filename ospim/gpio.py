@@ -40,7 +40,7 @@ class OSPiMGPIO:
   connected = True
 
 
-  # GPIO Pins used for serial communicaion
+  # GPIO Pins used for serial communication
   _pin_clk = ospim_conf.getint('gpio', 'pin_clk')
   _pin_noe = ospim_conf.getint('gpio', 'pin_noe')
   _pin_dat = ospim_conf.getint('gpio', 'pin_dat')
@@ -71,7 +71,8 @@ class OSPiMGPIO:
       self.shift_register_enable()
     except Exception, e:
       self.connected = False
-      logging.error('[__init__] Failed to communicate with OpenSprinkler: %s' % str(e))
+      logging.error('[__init__] Failed to communicate with OpenSprinkler: %s' %
+        str(e))
 
 
   def close(self, bits = None):
@@ -91,7 +92,8 @@ class OSPiMGPIO:
       GPIO.output(self._pin_noe, False)
     except Exception, e:
       self.connected = False
-      logging.error('[sr_enable] Failed to communicate with OpenSprinkler: %s' % str(e))
+      logging.error('[sr_enable] Failed to communicate with OpenSprinkler: %s' %
+        str(e))
 
 
   def shift_register_disable(self):
@@ -104,7 +106,8 @@ class OSPiMGPIO:
       GPIO.output(self._pin_noe, True)
     except Exception, e:
       self.connected = False
-      logging.error('[sr_disable] Failed to communicate with OpenSprinkler: %s' % str(e))
+      logging.error('[sr_disable] Failed to communicate with OpenSprinkler: %s' %
+        str(e))
 
 
   def shift_register_write(self, bits = None):
@@ -138,5 +141,6 @@ class OSPiMGPIO:
       GPIO.output(self._pin_lat, True)
     except Exception, e:
       self.connected = False
-      logging.error('[sr_write] Failed to communicate with OpenSprinkler: %s' % str(e))
+      logging.error('[sr_write] Failed to communicate with OpenSprinkler: %s' %
+        str(e))
 
