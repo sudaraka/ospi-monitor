@@ -26,7 +26,8 @@ import sys, time, atexit, logging, signal
 from .config import *
 from .webserver import *
 from .gpio import *
-from .zones import *
+from .storage import OSPiMZones
+
 
 # Make sure this script doesn't get executed directly
 if '__main__' == __name__:
@@ -175,7 +176,8 @@ class OSPiMDaemon:
       pid = None
 
     if not pid:
-      logging.warning('Could not locate PID file %s during the stop procedure' % self.pid_file)
+      logging.warning('Could not locate PID file %s during the stop procedure' %
+        self.pid_file)
       logging.warning('Stop procedure aborted')
       sys.stderr.write('ospimd is not running.\n')
 
@@ -229,7 +231,8 @@ class OSPiMDaemon:
 
       httpd.set_gpio_handler(self._gpio)
     except Exception, e:
-      logging.error('Failed to create HTTP Server[%d]: %s\n' % (e.errno, e.strerror))
+      logging.error('Failed to create HTTP Server: %s\n' %
+        str(e))
       sys.exit(1)
 
     while 1:

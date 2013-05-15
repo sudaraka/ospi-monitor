@@ -22,7 +22,7 @@
 import logging, os
 import RPi.GPIO as GPIO
 from .config import *
-from .zones import *
+from .storage import OSPiMZones
 
 
 # Make sure this script doesn't get executed directly

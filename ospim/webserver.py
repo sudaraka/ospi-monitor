@@ -25,7 +25,7 @@
 import sys, logging, mimetypes, random
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from .config import *
-from .zones import *
+from .storage import OSPiMZones
 from cgi import parse_header, parse_multipart, parse_qs
 
 
