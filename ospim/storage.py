@@ -19,16 +19,154 @@
 #
 
 
-import logging, os, json, copy
+import logging, os, json, copy, datetime, re
 from .config import *
 
 
+# =============================================================================
 # Make sure this script doesn't get executed directly
 if '__main__' == __name__:
   sys.exit(1)
 
 
-class OSPiMZones:
+# =============================================================================
+class OSPiMStorage:
+  """
+  Implements the common functionality that will be used by OSPiM local data
+  storage classes.
+  """
+
+  # Data file path. Must be overridden in the sub-class
+  _data_file = None
+
+  # Data (Python dictionary) that will be written to the disk file as a
+  # JSON string.
+  _data = {}
+
+
+  def __init__(self):
+    """
+    Make sure the path and data file exists in the system, and load the data
+    into memory snapshot if available
+    """
+
+    if not os.path.isdir(os.path.dirname(self._data_file)):
+      try:
+        os.makedirs(os.path.dirname(self._data_file), 0755)
+      except:
+        logging.warning(
+          'Failed to create storage file directory %s'
+          % os.path.dirname(self._data_file)
+        )
+        logging.warning('Changes will not be saved to ' + self._data_file)
+
+    # load settings from disk file
+    try:
+      f = open(self._data_file, 'r')
+      self._data = json.loads(f.read())
+      f.close()
+    except Exception, e:
+      # Inform the sub-class via initialize_data method that new data file
+      # needs to be created
+      self.initialize_data()
+
+  def initialize_data(self):
+    """
+    This method should be overridden in the sub-classes to generate the default
+    data structure when a new file is created
+    """
+    pass
+
+
+  def write(self):
+    """ Write the current memory snapshot of zone data in to disk file """
+
+    try:
+      f = open(self._data_file, 'w')
+      f.write(json.dumps(self._data))
+      f.close()
+    except Exception, e:
+      logging.warning('Failed to write data to ' + self._data_file)
+      logging.error(str(e))
+
+
+  def get_json(self):
+    """ Return the memory snapshot as JSON object (string) """
+
+    return json.dumps(self._data)
+
+
+# =============================================================================
+class OSPiMSchedule(OSPiMStorage):
+  """
+  Manages the JSON data file that act as a local cache to the Google Calendar
+  events.
+  Every zone in the schedule must be turned on
+  """
+
+  # Data file path
+  _data_file = ospim_conf.get('calendar', 'schedule_file')
+
+
+  def update(self, event_list, remove_non_existing = False):
+    """ Add the new events from given list in to the schedule data """
+
+    zones = OSPiMZones()
+
+    try:
+      self.remove_past_events()
+
+      for event_id, event in event_list.items():
+        if not event.has_key('zone_id'):
+          event['zone_id'] = None
+
+        event['zone_id'] = zones.get_id(event['zone_name'])
+
+        if None == event['zone_id']:
+          continue
+
+        self._data[event_id] = event
+
+      if remove_non_existing:
+        tmp_data = dict(self._data)
+
+        for event_id in tmp_data:
+          if event_id not in event_list:
+            self.remove(event_id)
+
+      self.write()
+    except Exception, e:
+      logging.error('[Schedule:update] ' + str(e))
+
+
+  def remove_past_events(self):
+    """
+    Remove events that have the end time (turn off) earlier than current time
+    """
+
+    try:
+      for event_id, event in self._data.items():
+        end_time = datetime.datetime.strptime(event['turn_off'],
+          '%Y-%m-%d %H:%M:%S')
+
+        if datetime.datetime.now() > end_time:
+          self.remove(event_id)
+
+    except Exception, e:
+      logging.info(str(e))
+
+
+  def remove(self, event_id):
+    """ Remove event from the data schedule """
+
+    if event_id not in self._data:
+      return
+
+    self._data.pop(event_id)
+
+
+# =============================================================================
+class OSPiMZones(OSPiMStorage):
   """
   Manages the JSON data file that maintains the sprinkler zone information
   """
@@ -49,33 +187,10 @@ class OSPiMZones:
   }
 
 
-  def __init__(self):
-    """
-    Make sure the path and zone data file exists in the system, and load the
-    data into memory snapshot if available
-    """
+  def initialize_data(self):
+    """ Initialize zone blocks on new data structure """
 
-    if not os.path.isdir(os.path.dirname(self._data_file)):
-      try:
-        os.makedirs(os.path.dirname(self._data_file), 0755)
-      except:
-        logging.warning(
-          'Failed to create zone file directory %s'
-          % os.path.dirname(self._data_file)
-        )
-        logging.warning('Zone setting changes will not be saved')
-
-    # load zone settings from disk file
-    try:
-      f = open(self._data_file, 'r')
-      self._data = json.loads(f.read())
-      f.close()
-    except Exception, e:
-      #logging.warning('Falling back to default zone data.')
-
-      # Call set_count with the default value to make it generate zone data set
-      # and save the file.
-      self.set_count(self._data['zone_count'])
+    self.set_count(self._data['zone_count'])
 
 
   def set_count(self, count):
@@ -126,20 +241,29 @@ class OSPiMZones:
       logging.error('[zone:set_status]: %s' % str(e))
 
 
-  def write(self):
-    """ Write the current memory snapshot of zone data in to disk file """
+  def get_id(self, zone_name):
+    """
+    Return the id of given zone name, or None when the zone doesn't exist
+    """
 
-    try:
-      f = open(self._data_file, 'w')
-      f.write(json.dumps(self._data))
-      f.close()
-    except Exception, e:
-      logging.warning('Failed to save the zone data')
-      logging.error(str(e))
+    if 1 > len(zone_name):
+      return None
 
+    # If the given zone name is in the pattern of "Zone #" match the # with
+    # zone id with a zone that has an empty name.
+    match = re.match('^Zone\s+(\d+)$', zone_name)
+    if None != match:
+      lookup_id = int(match.group(1)) - 1
 
-  def get_json(self):
-    """ Return the memory snapshot as JSON object (string) """
+      if 0 <= lookup_id \
+        and len(self._data['zone']) > lookup_id \
+        and self._data['zone_count'] > lookup_id \
+        and 1 > len(self._data['zone'][lookup_id]['name']):
+        return lookup_id
 
-    return json.dumps(self._data)
+    for zone_id, zone in enumerate(self._data['zone']):
+      if zone['name'].lower() == zone_name.lower():
+        return zone_id
+
+    return None
 

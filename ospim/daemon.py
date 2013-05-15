@@ -27,6 +27,7 @@ from .config import *
 from .webserver import *
 from .gpio import *
 from .storage import OSPiMZones
+from .calendar import OSPiCalendarThread
 
 
 # Make sure this script doesn't get executed directly
@@ -42,6 +43,9 @@ class OSPiMDaemon:
 
   # GPIO communication handler
   _gpio = None
+
+  # Calender lookup thread
+  _cal_thread = None
 
 
   def __init__(self):
@@ -141,6 +145,9 @@ class OSPiMDaemon:
   def sigterm_handler(self, signum, frame):
     """ Catch the SIGTERM to exit gracefully by triggering atexit. """
 
+    while self._cal_thread.is_alive():
+      self._cal_thread.stop()
+
     sys.exit(0)
 
 
@@ -230,6 +237,9 @@ class OSPiMDaemon:
       self._gpio = OSPiMGPIO()
 
       httpd.set_gpio_handler(self._gpio)
+
+      self._cal_thread = OSPiCalendarThread()
+      self._cal_thread.start()
     except Exception, e:
       logging.error('Failed to create HTTP Server: %s\n' %
         str(e))
