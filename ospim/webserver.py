@@ -22,18 +22,20 @@
 # https://github.com/rayshobby/opensprinkler
 #
 
-import sys, logging, mimetypes, random
+import sys, logging, mimetypes, random, json
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from .config import *
 from .storage import OSPiMZones
 from cgi import parse_header, parse_multipart, parse_qs
 
 
+# =============================================================================
 # Make sure this script doesn't get executed directly
 if '__main__' == __name__:
   sys.exit(1)
 
 
+# =============================================================================
 class OSPiMHTTPServer(HTTPServer):
   """
   This wrapper class for HTTPServer is used to maintain a single instance of
@@ -52,7 +54,7 @@ class OSPiMHTTPServer(HTTPServer):
     self._gpio = gpio_handler
 
 
-
+# =============================================================================
 class OSPiMRequestHandler(BaseHTTPRequestHandler):
   """
   OSPi Monitor daemon (ospimd) will forward all the HTTP request handling to
@@ -148,7 +150,7 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
         self._start_json_response()
 
         if 'zone' not in post:
-          logging.error('/updat-zone-status called without zone parameter')
+          logging.error('/update-zone-status called without zone parameter')
           self._send(json.dumps({"error": 1, "desc": "'zone' (id) parameter was not provided. Nothing to update."}))
           return
 
@@ -159,12 +161,12 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
           if 0 > zone_id or zone_count <= zone_id:
             raise Exception('Zone id out of range')
         except:
-          logging.error('/updat-zone-status called with invalid zone (id) parameter')
+          logging.error('/update-zone-status called with invalid zone (id) parameter')
           self._send(json.dumps({"error": 2, "desc": ("Given zone id (%s) doesn\'t exists. Nothing to update." % post['zone'][0])}))
           return
 
         if 'status' not in post:
-          logging.error('/updat-zone-status called without status parameter')
+          logging.error('/update-zone-status called without status parameter')
           self._send(json.dumps({"error": 3, "desc": "'status' parameter was not provided. Nothing to update."}))
           return
 
@@ -187,7 +189,6 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
       logging.error('Error handling request %s' % self.path)
       logging.error(str(e))
       self._report_error(str(e))
-
 
 
   def do_GET(self):
