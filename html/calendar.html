@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>OpenSprinkler Pi - Monitor - Calendar</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="css/ospim.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="css/calendar.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap-responsive.css" />
+</head>
+<body>
+
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+
+				<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</a>
+
+				<a class="brand" href="#">OpenSprinkler Pi - Monitor</a>
+
+				<div class="nav-collapse collapse">
+
+					<ul class="nav">
+						<li><a href="/" title="Settings"><i class="icon-white icon-asterisk"></i> <strong>Manual Control</strong></a></li>
+						<li class="active"><a href="#" title="Settings"><i class="icon-white icon-calendar"></i> <strong>Calendar</strong></a></li>
+					</ul>
+
+					<ul class="nav pull-right">
+						<li><a href="/settings.html" title="Settings"><i class="icon-white icon-cog"></i> Settings</a></li>
+					</ul>
+
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+	<div class="container">
+
+    <div id="div_loading"><div class="icon-refresh"></div> loading&hellip;</div>
+    <div id="div_loading_failed" class="alert alert-error">
+      <button type="button" class="close" data-dismiss="alert" >&times;</button>
+      <h4>Failed to load schedule</h4>
+      <span class="message">Please try refreshing this page again.</span>
+    </div>
+    <div id="div_save_success" class="alert alert-success">
+        <button type="button" class="close" data-dismiss="alert" >&times;</button>
+        <h4>Calendar information successfully updated!</h4>
+    </div>
+
+    <div id="div_schedule_content">
+
+    <fieldset>
+        <legend>Google Calender Id</legend>
+
+        <div class="input-append">
+            <input type="text" class="span4" value="" id="txt_cal_id" placeholder="abcdefghijklmnop1234567890@group.calendar.google.com" />
+            <button class="btn" type="button" id="btn_save_calendar_id"><i class="icon-ok-sign"></i> update</button>
+        </div>
+        <span class="help-block">Make sure your Google Calendar is publicly visible. At the moment OSPi Monitor doesn't support private calendars.</span>
+    </fieldset>
+
+    <h4>Scheduled Sprinkler Operations</h4>
+    <table class="table table-striped table-bordered span7" id="tbl_schedule">
+
+        <thead>
+            <tr>
+                <th class="span3">Zone</th>
+                <th class="span2">Turn On</th>
+                <th class="span2">Turn Off</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        </tbody>
+
+    </table>
+
+    </div>
+
+    </div>
+
+    <script type="text/javascript" language="JavaScript" src="js/jquery.js"></script>
+    <script type="text/javascript" language="JavaScript" src="js/bootstrap.js"></script>
+    <script type="text/javascript" language="JavaScript" src="js/common.js"></script>
+    <script type="text/javascript" language="JavaScript" src="js/calendar.js"></script>
+</body>
+</html>
+

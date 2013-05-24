@@ -1,0 +1,14 @@
+#div_loading_failed,
+#div_save_success,
+#div_schedule_content {
+	display: none;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.table td + td,
+.table th + th {
+  text-align: center;
+}

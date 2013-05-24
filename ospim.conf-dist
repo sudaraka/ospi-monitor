@@ -62,19 +62,15 @@ pin_dat = 21
 # Google calendar query related settings
 [calendar]
 
-# Local cache of the Google Calander events
+# Local cache of the Google Calender events
 schedule_file = /var/lib/ospim/schedule.json
 
-# Number of *minutes* to wait between queries
-query_delay = 1
+# Number of seconds to wait between Google API queries.
+# Minimum allowed delay is 10 seconds
+query_delay = 10
 
 # Google API key. Make sure you replace this with a valid key of your own.
 #
 # Get you Google API ker from:
 #	https://code.google.com/apis/console#access
 api_key = AIzaSyCYQGG7bd3HhKyLm_UFPScf8q867LnhiY4
-
-# Google Calendar id.
-# IMPORTANT: Make sure your calendar is public.
-calendar_id = fjtv7ij9bdjm9ljuqs5qtejdvc@group.calendar.google.com
-
