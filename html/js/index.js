@@ -18,7 +18,7 @@ populate_zone_data = function() {
 			zone_info.zone[i] = {'name':'', 'status':0};
 
 		if(1 > zone_info.zone[i]['name'].length)
-			zone_info.zone[i]['name'] = 'Zone ' + i;
+			zone_info.zone[i]['name'] = 'Zone ' + (i + 1);
 
 		$('<button>')
 			.attr({
