@@ -1,0 +1,17 @@
+source $HOME/.screenrc
+
+chdir /var/disk2/projects/ospim
+
+layout new 'OSPiM Development'
+
+screen -t 'Shell'
+split -v
+
+split
+focus
+screen -t 'Log' tail -f /var/log/ospim.log
+
+focus
+screen -t 'Editor' 'vim'
+resize 170
+
