@@ -268,32 +268,32 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
 
         self._start_json_response()
 
-        if 'get-schedule' == command[0]:
+        if 'get-schedule' == command:
             # Send complete schedule data
             self._command_get_schedule(post)
 
-        elif 'get-zones' == command[0]:
+        elif 'get-zones' == command:
             # Send complete zone data
             self._send(self.server._zone.get_json(), None)
 
-        elif 'save-calendar-id' == command[0]:
+        elif 'save-calendar-id' == command:
             # Update the Google calendar id
             self._command_save_calendar_id(post)
 
-        elif 'save-zone-count' == command[0]:
+        elif 'save-zone-count' == command:
             # Update the zone count
             self._command_save_zone_count(post)
 
-        elif 'save-zone-names' == command[0]:
+        elif 'save-zone-names' == command:
             # Update zone names
             self._command_save_zone_names(post)
 
-        elif 'update-zone-status' == command[0]:
+        elif 'update-zone-status' == command:
             # Update the zone status
             self._command_update_zone_status(post)
 
         else:
-            self._send_404('command "%s"' % command[0])
+            self._send_404('command "%s"' % command)
 
     def _command_get_schedule(self, post):
         """ Send complete schedule data"""
