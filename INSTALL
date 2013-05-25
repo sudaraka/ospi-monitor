@@ -1,8 +1,8 @@
-OpenSprinkler Pi Monitor v0.1 (Alpha)
+OpenSprinkler Pi Monitor v0.2 (Alpha)
 =====================================
 
 Following instruction is for downloading the source and installing the alpha
-release os OSPi Monitor for testing.
+release of OSPi Monitor for testing.
 
 ## 1. Download ##
 
@@ -14,7 +14,7 @@ http://git.sudaraka.org/opensprinkler/ospi-monitor/
 
 or, download and extract the source archive:
 
-http://git.sudaraka.org/opensprinkler/ospi-monitor/snapshot/ospi-monitor-0.1-alpha.tar.gz
+http://git.sudaraka.org/opensprinkler/ospi-monitor/snapshot/ospi-monitor-0.2-alpha.tar.gz
 
 ## 2. Installation ##
 
@@ -22,26 +22,18 @@ At this alpha testing stage OSPi Monitor will run from the extracted source
 directory. Simply extract the files from tarball if you are not using the git
 clone.
 
-Note: Assume the full path to directory you extracted from the source tarball
-or git clone is OSPIM_DIR
+However configuration and web files needs to be placed in pre-defined
+locations, run the following command to install those files.
 
-## 3. Configuration ##
+    sudo make install
 
-Copy the ospim.conf-dist to /etc/ospim.conf (or you may rename it in place)
+If the application is misbehaving, it could be due to bad configuration files,
+run the following command to clean up everything and then run the install
+command again.
 
-	cp OSPIM_DIR/ospim.conf-dist /etc/ospim.conf
+    sudo make dist-clean
 
-Copy the web interface files to /var/www/ospim directory.
-
-	cp -r OSPIM_DIR/html /var/www/ospim
-
-Create the zone data storage file. [TODO: This step will be built into the code
-in final release]
-
-	mkdir /var/lib/ospim
-	touch /var/lib/ospim/zone.json
-
-## 4. Running ##
+## 3. Running ##
 
 OSPi Monitor daemon can be started right from the source directory. It must run
 as root.
