@@ -32,6 +32,8 @@ populate_zone_data = function() {
 	}
 
 	$('#div_zone_buttons').show();
+
+    window.setTimeout('fetch_zone_data();', 1000 * 10);
 }
 
 update_zone = function() {
