@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -tt
 # ospid.py: Handle user and system requests to start/stop daemon
 #
 # Copyright 2013 Sudaraka Wijesinghe <sudaraka.wijesinghe@gmail.com>
@@ -23,49 +23,51 @@
 # http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 #
 
-import sys, logging
-from ospim.daemon import *
-from ospim.config import *
+import logging
+import sys
+
+from ospim.daemon import OSPiMDaemon
+from ospim.config import ospim_conf
 
 
 def exit_usage():
-  """
-  Print usage instructions and exit
-  """
+    """
+    Print usage instructions and exit
+    """
 
-  print 'usage: %s start|stop|restart' % sys.argv[0]
-  sys.exit(2)
+    print 'usage: %s start|stop|restart' % sys.argv[0]
+    sys.exit(2)
 
 
 # Run main program
 if '__main__' == __name__:
 
-  # require the action as first parameter
-  if 2 > len(sys.argv):
-    exit_usage()
+    # require the action as first parameter
+    if 2 > len(sys.argv):
+        exit_usage()
 
-  # Initialize logging
-  try:
-    logging.basicConfig(
-      filename=ospim_conf.get('daemon', 'log_file'),
-      format='%(asctime)s [%(levelname)s] %(message)s',
-      datefmt='%Y-%m-%d %I:%M:%S %p',
-      level=logging.INFO)
-  except IOError:
-    print 'Failed to open log file: %s' % ospim_conf.get('daemon', 'log_file')
-    sys.exit(1)
+    # Initialize logging
+    try:
+        logging.basicConfig(
+            filename=ospim_conf.get('daemon', 'log_file'),
+            format='%(asctime)s [%(levelname)s] %(message)s',
+            datefmt='%Y-%m-%d %I:%M:%S %p',
+            level=logging.INFO)
+    except IOError:
+        print 'Failed to open log file: %s' % \
+            ospim_conf.get('daemon', 'log_file')
+        sys.exit(1)
 
-  daemon = OSPiMDaemon()
+    daemon = OSPiMDaemon()
 
-  if 'start' == sys.argv[1]:
-    logging.info('ospimd starting...')
-    daemon.start()
-  elif 'stop' == sys.argv[1]:
-    logging.info('ospimd stopping...')
-    daemon.stop()
-  elif 'restart' == sys.argv[1]:
-    logging.info('ospimd restarting...')
-    daemon.restart()
-  else:
-    exit_usage()
-
+    if 'start' == sys.argv[1]:
+        logging.info('ospimd starting...')
+        daemon.start()
+    elif 'stop' == sys.argv[1]:
+        logging.info('ospimd stopping...')
+        daemon.stop()
+    elif 'restart' == sys.argv[1]:
+        logging.info('ospimd restarting...')
+        daemon.restart()
+    else:
+        exit_usage()

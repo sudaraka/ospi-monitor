@@ -125,159 +125,7 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
                 length = int(self.headers.getheader('content-length'))
                 post = parse_qs(self.rfile.read(length), keep_blank_values=1)
 
-            # Process commands
-            command[0] = command[0].lower()
-
-            if 'get-schedule' == command[0]:
-                # Send complete schedule data
-
-                hash = None
-                if 'hash' in post:
-                    hash = post['hash'][0]
-
-                self._start_json_response()
-
-                # Get the current zone state signature and remove any passed
-                # events (if exists), then get the new state signature for the
-                # with the changes.
-                before_hash = hashlib.md5(
-                    json.dumps(self.server._zone._data)
-                )
-                self.server._schedule.remove_past_events()
-                after_hash = hashlib.md5(
-                    json.dumps(self.server._zone._data)
-                )
-
-                # If the state has changed during the cleanup of passed events,
-                # flush the changes to device
-                if before_hash.hexdigest() != after_hash.hexdigest():
-                    self.server._gpio.shift_register_write()
-
-                # Send fresh data to the client
-                self._send(self.server._schedule.get_json(hash), None)
-
-            elif 'get-zones' == command[0]:
-                # Send complete zone data
-
-                self._start_json_response()
-                self._send(self.server._zone.get_json(), None)
-
-            elif 'save-calendar-id' == command[0]:
-                # Update the Google calendar id
-
-                self._start_json_response()
-
-                if 'id' not in post:
-                    logging.error(
-                        '/save-calendar-id called without id parameter')
-                    self._send(json.dumps({
-                        "error": 1,
-                        "desc": "'id' parameter was not provided. \
-                            Nothing to update."
-                    }))
-                    return
-
-                self.server._schedule.set_calendar_id(post['id'][0])
-                self._send(json.dumps({"error": 0, "desc": "Ok"}))
-
-            elif 'save-zone-count' == command[0]:
-                # Update the zone count
-
-                self._start_json_response()
-
-                if 'count' not in post:
-                    logging.error(
-                        '/save-zone-count called without count parameter')
-                    self._send(json.dumps({
-                        "error": 1,
-                        "desc": "'count' parameter was not provided. \
-                            Nothing to update."
-                    }))
-                    return
-
-                try:
-                    zone_count = int(post['count'][0])
-                except:
-                    zone_count = 1
-
-                self.server._zone.set_count(zone_count)
-                self._send(json.dumps({"error": 0, "desc": "Ok"}))
-
-            elif 'save-zone-names' == command[0]:
-                # Update zone names
-
-                self._start_json_response()
-
-                if 'zone_name' not in post:
-                    logging.error(
-                        '/save-zone-names called without zone_name parameter \
-                            list')
-                    self._send(json.dumps({
-                        "error": 1,
-                        "desc": "'zone_name' parameter list was not provided. \
-                            Nothing to update."
-                    }))
-                    return
-
-                self.server._zone.set_names(post['zone_name'])
-                self._send(json.dumps({"error": 0, "desc": "Ok"}))
-
-            elif 'update-zone-status' == command[0]:
-                # Update the zone status
-
-                self._start_json_response()
-
-                if 'zone' not in post:
-                    logging.error(
-                        '/update-zone-status called without zone parameter')
-                    self._send(json.dumps({
-                        "error": 1,
-                        "desc": "'zone' (id) parameter was not provided. \
-                            Nothing to update."
-                    }))
-                    return
-
-                try:
-                    zone_id = int(post['zone'][0])
-                    zone_count = self.server._zone._data['zone_count']
-
-                    if 0 > zone_id or zone_count <= zone_id:
-                        raise Exception('Zone id out of range')
-                except:
-                    logging.error(
-                        '/update-zone-status called with invalid zone (id) \
-                            parameter')
-                    self._send(json.dumps({
-                        "error": 2,
-                        "desc": ("Given zone id (%s) doesn\'t exists. \
-                            Nothing to update." % post['zone'][0])
-                    }))
-                    return
-
-                if 'status' not in post:
-                    logging.error(
-                        '/update-zone-status called without status parameter')
-                    self._send(json.dumps({
-                        "error": 3,
-                        "desc": "'status' parameter was not provided. \
-                            Nothing to update."
-                    }))
-                    return
-
-                try:
-                    new_status = int(post['status'][0])
-                    if 0 != new_status:
-                        new_status = 1
-                except:
-                    new_status = 0
-
-                self.server._zone.set_status(zone_id, new_status)
-                self.server._gpio.shift_register_write()
-
-                self._send(json.dumps({"error": 0, "desc": "Ok"}))
-
-            else:
-                self._send_404('command "%s"' % command[0])
+            self._process_command(command[0].lower(), post)
 
         except Exception as e:
             logging.error('Error handling request %s' % self.path)
@@ -414,3 +262,167 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
 
         if 0 < len(self._root) and '/' == self._root[-1]:
             self._root = self._root[:-1]
+
+    def _process_command(self, command, post):
+        """ Process commands """
+
+        self._start_json_response()
+
+        if 'get-schedule' == command[0]:
+            # Send complete schedule data
+            self._command_get_schedule(post)
+
+        elif 'get-zones' == command[0]:
+            # Send complete zone data
+            self._send(self.server._zone.get_json(), None)
+
+        elif 'save-calendar-id' == command[0]:
+            # Update the Google calendar id
+            self._command_save_calendar_id(post)
+
+        elif 'save-zone-count' == command[0]:
+            # Update the zone count
+            self._command_save_zone_count(post)
+
+        elif 'save-zone-names' == command[0]:
+            # Update zone names
+            self._command_save_zone_names(post)
+
+        elif 'update-zone-status' == command[0]:
+            # Update the zone status
+            self._command_update_zone_status(post)
+
+        else:
+            self._send_404('command "%s"' % command[0])
+
+    def _command_get_schedule(self, post):
+        """ Send complete schedule data"""
+
+        hash = None
+        if 'hash' in post:
+            hash = post['hash'][0]
+
+        # Get the current zone state signature and remove any passed
+        # events (if exists), then get the new state signature for the
+        # with the changes.
+        before_hash = hashlib.md5(
+            json.dumps(self.server._zone._data)
+        )
+        self.server._schedule.remove_past_events()
+        after_hash = hashlib.md5(
+            json.dumps(self.server._zone._data)
+        )
+
+        # If the state has changed during the cleanup of passed events,
+        # flush the changes to device
+        if before_hash.hexdigest() != after_hash.hexdigest():
+            self.server._gpio.shift_register_write()
+
+        # Send fresh data to the client
+        self._send(self.server._schedule.get_json(hash), None)
+
+    def _command_save_calendar_id(self, post):
+        """ Update the Google calendar id """
+
+        if 'id' not in post:
+            logging.error(
+                '/save-calendar-id called without id parameter')
+            self._send(json.dumps({
+                "error": 1,
+                "desc": "'id' parameter was not provided. \
+                    Nothing to update."
+            }))
+            return
+
+        self.server._schedule.set_calendar_id(post['id'][0])
+        self._send(json.dumps({"error": 0, "desc": "Ok"}))
+
+    def _command_save_zone_count(self, post):
+        """ Update the zone count """
+
+        if 'count' not in post:
+            logging.error(
+                '/save-zone-count called without count parameter')
+            self._send(json.dumps({
+                "error": 1,
+                "desc": "'count' parameter was not provided. \
+                    Nothing to update."
+            }))
+            return
+
+        try:
+            zone_count = int(post['count'][0])
+        except:
+            zone_count = 1
+
+        self.server._zone.set_count(zone_count)
+        self._send(json.dumps({"error": 0, "desc": "Ok"}))
+
+    def _command_save_zone_names(self, post):
+        """ Update zone names """
+
+        if 'zone_name' not in post:
+            logging.error(
+                '/save-zone-names called without zone_name parameter \
+                    list')
+            self._send(json.dumps({
+                "error": 1,
+                "desc": "'zone_name' parameter list was not provided. \
+                    Nothing to update."
+            }))
+            return
+
+        self.server._zone.set_names(post['zone_name'])
+        self._send(json.dumps({"error": 0, "desc": "Ok"}))
+
+    def _command_update_zone_status(self, post):
+        """ Update the zone status """
+
+        if 'zone' not in post:
+            logging.error(
+                '/update-zone-status called without zone parameter')
+            self._send(json.dumps({
+                "error": 1,
+                "desc": "'zone' (id) parameter was not provided. \
+                    Nothing to update."
+            }))
+            return
+
+        try:
+            zone_id = int(post['zone'][0])
+            zone_count = self.server._zone._data['zone_count']
+
+            if 0 > zone_id or zone_count <= zone_id:
+                raise Exception('Zone id out of range')
+        except:
+            logging.error(
+                '/update-zone-status called with invalid zone (id) \
+                    parameter')
+            self._send(json.dumps({
+                "error": 2,
+                "desc": ("Given zone id (%s) doesn\'t exists. \
+                    Nothing to update." % post['zone'][0])
+            }))
+            return
+
+        if 'status' not in post:
+            logging.error(
+                '/update-zone-status called without status parameter')
+            self._send(json.dumps({
+                "error": 3,
+                "desc": "'status' parameter was not provided. \
+                    Nothing to update."
+            }))
+            return
+
+        try:
+            new_status = int(post['status'][0])
+            if 0 != new_status:
+                new_status = 1
+        except:
+            new_status = 0
+
+        self.server._zone.set_status(zone_id, new_status)
+        self.server._gpio.shift_register_write()
+
+        self._send(json.dumps({"error": 0, "desc": "Ok"}))

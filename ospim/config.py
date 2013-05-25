@@ -18,8 +18,12 @@
 # along with OSPi Monitor.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import ConfigParser, os
+import ConfigParser
+import os
 
 ospim_conf = ConfigParser.ConfigParser()
-ospim_conf.read(['/etc/ospim.conf', os.path.expanduser('~/.config/ospim/ospim.conf'), './ospim.conf'])
-
+ospim_conf.read([
+    '/etc/ospim.conf',
+    os.path.expanduser('~/.config/ospim/ospim.conf'),
+    './ospim.conf'
+])

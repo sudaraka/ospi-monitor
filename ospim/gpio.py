@@ -19,128 +19,123 @@
 #
 
 
-import logging, os
+import logging
+import sys
+
 import RPi.GPIO as GPIO
-from .config import *
+from .config import ospim_conf
 from .storage import OSPiMZones
 
 
 # Make sure this script doesn't get executed directly
 if '__main__' == __name__:
-  sys.exit(1)
+    sys.exit(1)
 
 
 class OSPiMGPIO:
-  """
-  Makes GPIO calls on RaspberryPi to operate OpenSprinkler hardware
-  """
 
-
-  # Indicator to the status of GPIO communication availability
-  connected = True
-
-
-  # GPIO Pins used for serial communication
-  _pin_clk = ospim_conf.getint('gpio', 'pin_clk')
-  _pin_noe = ospim_conf.getint('gpio', 'pin_noe')
-  _pin_dat = ospim_conf.getint('gpio', 'pin_dat')
-  _pin_lat = ospim_conf.getint('gpio', 'pin_lat')
-
-
-  def __init__(self):
     """
-    Initialize GPIO on RaspberryPi to interface with OpenSprinkler shift
-    register.
+    Makes GPIO calls on RaspberryPi to operate OpenSprinkler hardware
     """
-    try:
-      GPIO.cleanup()
 
-      GPIO.setmode(GPIO.BCM)
+    # Indicator to the status of GPIO communication availability
+    connected = True
 
-      GPIO.setup(self._pin_clk, GPIO.OUT)
-      GPIO.setup(self._pin_noe, GPIO.OUT)
+    # GPIO Pins used for serial communication
+    _pin_clk = ospim_conf.getint('gpio', 'pin_clk')
+    _pin_noe = ospim_conf.getint('gpio', 'pin_noe')
+    _pin_dat = ospim_conf.getint('gpio', 'pin_dat')
+    _pin_lat = ospim_conf.getint('gpio', 'pin_lat')
 
-      self.shift_register_disable()
+    def __init__(self):
+        """
+        Initialize GPIO on RaspberryPi to interface with OpenSprinkler shift
+        register.
+        """
+        try:
+            GPIO.cleanup()
 
-      GPIO.setup(self._pin_dat, GPIO.OUT)
-      GPIO.setup(self._pin_lat, GPIO.OUT)
+            GPIO.setmode(GPIO.BCM)
 
-      # Write the current status of zones to start with
-      self.shift_register_write()
+            GPIO.setup(self._pin_clk, GPIO.OUT)
+            GPIO.setup(self._pin_noe, GPIO.OUT)
 
-      self.shift_register_enable()
-    except Exception, e:
-      self.connected = False
-      logging.error('[__init__] Failed to communicate with OpenSprinkler: %s' %
-        str(e))
+            self.shift_register_disable()
 
+            GPIO.setup(self._pin_dat, GPIO.OUT)
+            GPIO.setup(self._pin_lat, GPIO.OUT)
 
-  def close(self, bits = None):
-    """ Write the latest zone status from data file and cleanup GPIO """
+            # Write the current status of zones to start with
+            self.shift_register_write()
 
-    self.shift_register_write(bits)
-    GPIO.cleanup()
+            self.shift_register_enable()
+        except Exception as e:
+            self.connected = False
+            logging.error('[__init__] Failed to communicate with \
+                OpenSprinkler: %s' % str(e))
 
+    def close(self, bits=None):
+        """ Write the latest zone status from data file and cleanup GPIO """
 
-  def shift_register_enable(self):
-    """ Set OpenSprinkler shift register status to Enable """
+        self.shift_register_write(bits)
+        GPIO.cleanup()
 
-    if not self.connected:
-      return
+    def shift_register_enable(self):
+        """ Set OpenSprinkler shift register status to Enable """
 
-    try:
-      GPIO.output(self._pin_noe, False)
-    except Exception, e:
-      self.connected = False
-      logging.error('[sr_enable] Failed to communicate with OpenSprinkler: %s' %
-        str(e))
+        if not self.connected:
+            return
 
+        try:
+            GPIO.output(self._pin_noe, False)
+        except Exception as e:
+            self.connected = False
+            logging.error('[sr_enable] Failed to communicate with \
+                OpenSprinkler: %s' % str(e))
 
-  def shift_register_disable(self):
-    """ Set OpenSprinkler shift register status to Disable """
+    def shift_register_disable(self):
+        """ Set OpenSprinkler shift register status to Disable """
 
-    if not self.connected:
-      return
+        if not self.connected:
+            return
 
-    try:
-      GPIO.output(self._pin_noe, True)
-    except Exception, e:
-      self.connected = False
-      logging.error('[sr_disable] Failed to communicate with OpenSprinkler: %s' %
-        str(e))
+        try:
+            GPIO.output(self._pin_noe, True)
+        except Exception as e:
+            self.connected = False
+            logging.error('[sr_disable] Failed to communicate with \
+                OpenSprinkler: %s' % str(e))
 
+    def shift_register_write(self, bits=None):
+        """ Send zone status bits to OpenSprinkler """
 
-  def shift_register_write(self, bits = None):
-    """ Send zone status bits to OpenSprinkler """
+        if not self.connected:
+            return
 
-    if not self.connected:
-      return
+        if None == bits:
+            bits = []
+            data = OSPiMZones()._data
 
-    if None == bits:
-      bits = []
-      data = OSPiMZones()._data
+            for i in range(data['zone_count']):
+                bits.append(data['zone'][i]['status'])
 
-      for i in range(data['zone_count']):
-        bits.append(data['zone'][i]['status'])
+        logging.info('[sr_write] Writing: %s' % bits)
 
-    logging.info('[sr_write] Writing: %s' % bits)
+        try:
+            GPIO.output(self._pin_clk, False)
+            GPIO.output(self._pin_lat, False)
 
-    try:
-      GPIO.output(self._pin_clk, False)
-      GPIO.output(self._pin_lat, False)
+            # Send bits to OpenSprinkler via GPIO
+            # Note: Order of the zones we have on the data structure is
+            # big-endian (first to last), and for the serial communication it
+            # has to be little-endian (last to first). Hence the len - pos -1
+            for bit_pos in range(len(bits)):
+                GPIO.output(self._pin_clk, False)
+                GPIO.output(self._pin_dat, bits[len(bits) - bit_pos - 1])
+                GPIO.output(self._pin_clk, True)
 
-      # Send bits to OpenSprinkler via GPIO
-      # Note: Order of the zones we have on the data structure is big-endian
-      # (first to last), and for the serial communication it has to be
-      # little-endian (last to first). Hence the len - pos -1
-      for bit_pos in range(len(bits)):
-        GPIO.output(self._pin_clk, False)
-        GPIO.output(self._pin_dat, bits[len(bits) - bit_pos - 1])
-        GPIO.output(self._pin_clk, True)
-
-      GPIO.output(self._pin_lat, True)
-    except Exception, e:
-      self.connected = False
-      logging.error('[sr_write] Failed to communicate with OpenSprinkler: %s' %
-        str(e))
-
+            GPIO.output(self._pin_lat, True)
+        except Exception as e:
+            self.connected = False
+            logging.error('[sr_write] Failed to communicate with \
+                OpenSprinkler: %s' % str(e))
