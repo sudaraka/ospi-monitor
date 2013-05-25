@@ -22,7 +22,9 @@
 
 install:
 	install -b ospim.conf-dist /etc/ospim.conf
-	install -d /var/www/ospim/{,js,css,img}
+	install -d /var/www/ospim/js
+	install -d /var/www/ospim/css
+	install -d /var/www/ospim/img
 	install html/*.html /var/www/ospim
 	install html/css/* /var/www/ospim/css
 	install html/js/* /var/www/ospim/js
