@@ -7,22 +7,10 @@ Here are the key requirements:
 * combine manual and calendar python code bases into one service that runs at
   boot.  init.d files etc should be included as part of a debian package.
 
-* have web interface that is mobile compatible to turn on and off the sprinkler
-  zones.  Same functionality as the ospi_manual.py script today, but make it
-  work on a mobile screen without zooming in and out, and make the buttons show
-  up with customizable names from a config file.
-  For instance Zone 1 = "Front Yard" etc.
-
-* keep the functionality from ospi_gc.py
-
-* keep track of sprinkler zone state across the two functions.  If the calendar
-  turns on a zone it should show up as active on the web interface.
-
 * roll it all up in a deb package with dependencies so novice users (well
   novice users that are OK with command line package installation, not novice
   users who can't change batteries in their mouse...but I digress....) can
   install and take advantage of sweet system.
 
-* code should be light weight as it is running on a Pi.  The python http socket
-  implementation is fine, but I would like to stay away from Apache etc.
+fjtv7ij9bdjm9ljuqs5qtejdvc@group.calendar.google.com
 
