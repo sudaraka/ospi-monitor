@@ -129,7 +129,6 @@ class GoogleCalender:
         parameters['orderBy'] = 'startTime'
 
         url += '?' + urllib.urlencode(parameters)
-        logging.info(url)
 
         try:
             http = httplib2.Http()
