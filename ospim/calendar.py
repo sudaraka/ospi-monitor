@@ -102,10 +102,15 @@ class GoogleCalender:
         Convert ISO time stamp from Google API to Python datetime object
         """
 
-        # Drop the timezone part
+        # Drop the timezone part (GMT + time zones)
         plus_pos = iso_datetime_string.find('+')
         if plus_pos:
             iso_datetime_string = iso_datetime_string[:plus_pos]
+
+        # Drop the timezone part (GMT - time zones)
+        minus_pos = iso_datetime_string.rfind('-')
+        if minus_pos and 10 < minus_pos:
+            iso_datetime_string = iso_datetime_string[:minus_pos]
 
         return datetime.datetime.strptime(
             iso_datetime_string,
@@ -217,7 +222,7 @@ class OSPiCalendarThread(threading.Thread):
                     self._update_zone_from_schedule(zone_hash)
 
             except Exception, e:
-                logging.error('[calendar:run]' + str(e))
+                logging.error('[calendar:run] ' + str(e))
 
             # Here we sleep bunch of 1 second intervals that will add up to
             # query_delay so when the stop() is called the thread will exit
