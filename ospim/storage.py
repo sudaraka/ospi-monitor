@@ -228,6 +228,31 @@ class OSPiMSchedule(OSPiMStorage):
         # Preserver changes by writing them back to the disk file
         self.write()
 
+    def get_json(self, hash=None):
+        """ Override parent class to sort by event start time """
+
+        # Calculate the hash of the current data
+        data_hash = hashlib.md5(json.dumps(self._data)).hexdigest()
+
+        # If the given hash is equal to current data hash we only return a
+        # skeleton data structure with the hash indicating that data has not
+        # changed
+        if hash == data_hash:
+            return json.dumps({'_data_hash': data_hash})
+
+        # Work on a separate copy of data
+        data = dict(self._data)
+        data['_data_hash'] = data_hash
+
+        sorted_events = sorted(data['events'].items(),
+                               key=lambda k: k[1]['turn_on'])
+
+        data['events'] = []
+        for id, event in sorted_events:
+            data['events'].append(event)
+
+        return json.dumps(data)
+
 
 # =============================================================================
 class OSPiMZones(OSPiMStorage):
