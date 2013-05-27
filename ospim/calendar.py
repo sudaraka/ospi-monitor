@@ -240,8 +240,8 @@ class OSPiCalendarThread(threading.Thread):
         """
 
         for eid, e in self._schedule._data['events'].items():
-            if 1 == e['running']:
-                self._zone.set_status(e['zone_id'], e['running'])
+            #if 1 == e['running']:
+            self._zone.set_status(e['zone_id'], e['running'], 'S')
 
         new_hash = hashlib.md5(json.dumps(self._zone._data))
 

@@ -267,7 +267,8 @@ class OSPiMZones(OSPiMStorage):
     # Skeleton data structure for a single zone
     _zone_block = {
         "name": "",
-        "status": 0
+        "status": 0,
+        "state_owner": "M"
     }
 
     # Default zone configuration, and the memory snapshot of the disk file
@@ -313,7 +314,7 @@ class OSPiMZones(OSPiMStorage):
             self._data['zone'][zone]['name'] = name
             self.write()
 
-    def set_status(self, zone_id, status):
+    def set_status(self, zone_id, status, owner='M'):
         """
         Update the current status (on/off) of the given zone.
 
@@ -321,8 +322,19 @@ class OSPiMZones(OSPiMStorage):
         the hardware status is. Hardware needs to be update separately.
         """
 
+        #if 'state_owner' not in self._data['zone'][zone_id]:
+            #self._data['zone'][zone_id]['state_owner'] = owner
+
+        # Zone can only be turned off by the method that turned it on (state
+        # owner)
+        if 0 == status and \
+                'M' == self._data['zone'][zone_id]['state_owner'] and \
+                'S' == owner:
+            return
+
         try:
             self._data['zone'][zone_id]['status'] = status
+            self._data['zone'][zone_id]['state_owner'] = owner
             self.write()
         except Exception as e:
             logging.error('[zone:set_status]: %s' % str(e))
