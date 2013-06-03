@@ -5,6 +5,10 @@
 	display: none;
 }
 
+#div_zone_buttons {
+    clear: both;
+}
+
 #div_zone_buttons button {
 	font-weight: bold;
 }
@@ -31,3 +35,12 @@
 	}
 }
 
+.color-key {
+    clear: both;
+    float: none !important;
+    margin: 1em auto !important;
+}
+
+.color-key .label {
+    text-align: center;
+}

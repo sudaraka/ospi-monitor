@@ -72,6 +72,9 @@ class GoogleCalender:
         return_list = {}
 
         for event in event_list:
+            if 'summary' not in event:
+                continue
+
             start_time = self._iso_datetime_to_py(event['start']['dateTime'])
             end_time = self._iso_datetime_to_py(event['end']['dateTime'])
 

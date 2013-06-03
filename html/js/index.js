@@ -20,13 +20,19 @@ populate_zone_data = function() {
 		if(1 > zone_info.zone[i]['name'].length)
 			zone_info.zone[i]['name'] = 'Zone ' + (i + 1);
 
+        var status_class = '';
+        if(1 == zone_info.zone[i]['status']) {
+            status_class = ' btn-success';
+            if('S' == zone_info.zone[i]['state_owner']) status_class =' btn-warning';
+        }
+
 		$('<button>')
 			.attr({
 				'type': 'button',
 				'data-zone': i,
 				'data-status': zone_info.zone[i]['status']
 			})
-			.addClass('span2 but' + ((1 == zone_info.zone[i]['status'])?' btn-success':''))
+			.addClass('span2 but' + status_class)
 			.text(zone_info.zone[i]['name'])
 			.appendTo($('#div_zone_buttons'))
 	}
