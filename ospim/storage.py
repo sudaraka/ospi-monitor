@@ -322,8 +322,8 @@ class OSPiMZones(OSPiMStorage):
         the hardware status is. Hardware needs to be update separately.
         """
 
-        #if 'state_owner' not in self._data['zone'][zone_id]:
-            #self._data['zone'][zone_id]['state_owner'] = owner
+        if 'state_owner' not in self._data['zone'][zone_id]:
+            self._data['zone'][zone_id]['state_owner'] = owner
 
         # Zone can only be turned off by the method that turned it on (state
         # owner)
