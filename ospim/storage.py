@@ -156,6 +156,7 @@ class OSPiMSchedule(OSPiMStorage):
                 # Get zone it from the name (event summary text)
                 event['zone_id'] = self._zone.get_id(event['zone_name'])
 
+                # Don't add unidentified zones
                 if None == event['zone_id']:
                     continue
 
@@ -282,6 +283,14 @@ class OSPiMZones(OSPiMStorage):
 
         self.set_count(self._data['zone_count'])
 
+    def set_max_run(self, hours):
+        """ Set the number of hours a zone can be turned on for """
+
+        self._data['max_run'] = hours
+
+        # Preserver changes by writing them back to the disk file
+        self.write()
+
     def set_count(self, count):
         """ Set the number of zones available in the connected device """
 
@@ -332,9 +341,16 @@ class OSPiMZones(OSPiMStorage):
                 'S' == owner:
             return
 
+        # When turning the zone on set the start time to track maximum
+        # allowable run time.
+        if 1 == status and 0 == self._data['zone'][zone_id]['status']:
+            self._data['zone'][zone_id]['start_time'] = \
+                str(datetime.datetime.now())
+
         try:
             self._data['zone'][zone_id]['status'] = status
             self._data['zone'][zone_id]['state_owner'] = owner
+
             self.write()
         except Exception as e:
             logging.error('[zone:set_status]: %s' % str(e))
@@ -364,3 +380,26 @@ class OSPiMZones(OSPiMStorage):
                 return zone_id
 
         return None
+
+    def clear_long_running_zones(self):
+        """
+        Iterate through the (running) zone list and turn them off if running
+        over the max_run hours
+        """
+
+        data_changed = False
+
+        for event in self._data['zone']:
+            if 1 == event['status']:
+                start = datetime.datetime.strptime(
+                    event['start_time'],
+                    '%Y-%m-%d %H:%M:%S.%f'
+                )
+
+                if datetime.timedelta(hours=self._data['max_run']) <= \
+                        datetime.datetime.now() - start:
+                    event['status'] = 0
+                    data_changed = True
+
+        if data_changed:
+            self.write()

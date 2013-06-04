@@ -280,6 +280,11 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
             # Update the Google calendar id
             self._command_save_calendar_id(post)
 
+        elif 'save-max-run' == command:
+            # Update the maximum number of hours that a zone can be turned on
+            # for
+            self._command_save_max_run(post)
+
         elif 'save-zone-count' == command:
             # Update the zone count
             self._command_save_zone_count(post)
@@ -329,12 +334,35 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
                 '/save-calendar-id called without id parameter')
             self._send(json.dumps({
                 "error": 1,
-                "desc": "'id' parameter was not provided. \
-                    Nothing to update."
+                "desc": "'id' parameter was not provided." +
+                " Nothing to update."
             }))
             return
 
         self.server._schedule.set_calendar_id(post['id'][0])
+        self._send(json.dumps({"error": 0, "desc": "Ok"}))
+
+    def _command_save_max_run(self, post):
+        """
+        Update the maximum number of hours that zone can be turned on for
+        """
+
+        if 'hours' not in post:
+            logging.error(
+                '/save-max-run called without hours parameter')
+            self._send(json.dumps({
+                "error": 1,
+                "desc": "'hours' parameter was not provided." +
+                " Nothing to update."
+            }))
+            return
+
+        try:
+            hours = int(post['hours'][0])
+        except:
+            hours = 3
+
+        self.server._zone.set_max_run(hours)
         self._send(json.dumps({"error": 0, "desc": "Ok"}))
 
     def _command_save_zone_count(self, post):
@@ -345,8 +373,8 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
                 '/save-zone-count called without count parameter')
             self._send(json.dumps({
                 "error": 1,
-                "desc": "'count' parameter was not provided. \
-                    Nothing to update."
+                "desc": "'count' parameter was not provided." +
+                " Nothing to update."
             }))
             return
 
@@ -363,12 +391,11 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
 
         if 'zone_name' not in post:
             logging.error(
-                '/save-zone-names called without zone_name parameter \
-                    list')
+                '/save-zone-names called without zone_name parameter list')
             self._send(json.dumps({
                 "error": 1,
-                "desc": "'zone_name' parameter list was not provided. \
-                    Nothing to update."
+                "desc": "'zone_name' parameter list was not provided." +
+                        " Nothing to update."
             }))
             return
 
@@ -383,8 +410,8 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
                 '/update-zone-status called without zone parameter')
             self._send(json.dumps({
                 "error": 1,
-                "desc": "'zone' (id) parameter was not provided. \
-                    Nothing to update."
+                "desc": "'zone' (id) parameter was not provided." +
+                " Nothing to update."
             }))
             return
 
@@ -396,12 +423,11 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
                 raise Exception('Zone id out of range')
         except:
             logging.error(
-                '/update-zone-status called with invalid zone (id) \
-                    parameter')
+                '/update-zone-status called with invalid zone (id) parameter')
             self._send(json.dumps({
                 "error": 2,
-                "desc": ("Given zone id (%s) doesn\'t exists. \
-                    Nothing to update." % post['zone'][0])
+                "desc": ("Given zone id (%s) doesn\'t exists." +
+                " Nothing to update." % post['zone'][0])
             }))
             return
 
@@ -410,8 +436,8 @@ class OSPiMRequestHandler(BaseHTTPRequestHandler):
                 '/update-zone-status called without status parameter')
             self._send(json.dumps({
                 "error": 3,
-                "desc": "'status' parameter was not provided. \
-                    Nothing to update."
+                "desc": "'status' parameter was not provided." +
+                " Nothing to update."
             }))
             return
 

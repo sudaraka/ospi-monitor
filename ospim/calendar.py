@@ -65,9 +65,10 @@ class GoogleCalender:
             cache._data['calendar_id'], {'timeMin': time_stamp}
         )
 
-        # When there is no events in the calendar, return an empty list
-        if None == event_list or 1 > len(event_list):
-            event_list = []
+        # In case of a communication error, ignore updating records
+        if None == event_list:
+            return
+            #event_list = []
 
         return_list = {}
 
@@ -77,6 +78,12 @@ class GoogleCalender:
 
             start_time = self._iso_datetime_to_py(event['start']['dateTime'])
             end_time = self._iso_datetime_to_py(event['end']['dateTime'])
+
+            # Enforce maximum hour of running a zone rule
+            time_delta = datetime.timedelta(
+                hours=cache._zone._data['max_run'])
+            if time_delta < end_time - start_time:
+                continue
 
             if datetime.datetime.now() > end_time:
                 continue
@@ -97,8 +104,6 @@ class GoogleCalender:
             }
 
         cache.update(return_list, True)
-
-        return return_list
 
     def _iso_datetime_to_py(self, iso_datetime_string):
         """
@@ -220,6 +225,7 @@ class OSPiCalendarThread(threading.Thread):
                     zone_hash = hashlib.md5(json.dumps(self._zone._data))
 
                     self.gcal.fetch_events(self._schedule)
+                    self._zone.clear_long_running_zones()
 
                     # Update zone status from schedule
                     self._update_zone_from_schedule(zone_hash)

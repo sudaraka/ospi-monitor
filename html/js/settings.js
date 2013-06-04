@@ -5,6 +5,8 @@ $(function(){
 
 	$('#btn_save_zone_count').click(save_zone_count);
 
+	$('#btn_save_max_run').click(save_max_run);
+
 	$('#btn_save_zone_names').click(save_zone_names);
 
 	fetch_zone_data();
@@ -14,6 +16,7 @@ $(function(){
 // Implements the handler function called by fetch_zone_data()
 populate_zone_data = function() {
 	$('#txt_zone_count').val(zone_info.zone_count);
+	$('#txt_max_run').val(zone_info.max_run);
 
 	$('#div_zone_name_list *').remove();
 	for(var i = 0; i < zone_info.zone_count; i++) {
@@ -38,6 +41,38 @@ populate_zone_data = function() {
 	}
 
 	$('#div_settings_content').show();
+}
+
+save_max_run = function() {
+	$('#txt_max_run').attr('disabled', true);
+	$('#btn_save_max_run').attr('disabled', true);
+
+	var max_run = $('#txt_max_run').val();
+	max_run.replace(/[^\d]/, '');
+
+	$.post('/save-max-run', 'hours=' + escape(max_run))
+		.done(function(result) {
+			if(0 == result.error) {
+				$('#div_save_success').show();
+
+				$('#div_settings_content').show();
+				rotate_refresh(0, $('#div_loading .icon-refresh'));
+				$('#div_loading').show();
+				fetch_zone_data();
+			}
+			else {
+				$('#div_save_failed')
+					.find('.message')
+						.text(result.desc)
+						.end()
+					.show();
+			}
+		})
+		.always(function(){
+			$('#txt_max_run').attr('disabled', false);
+			$('#btn_save_max_run').attr('disabled', false);
+		});
+
 }
 
 save_zone_count = function() {
