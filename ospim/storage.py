@@ -79,10 +79,19 @@ class OSPiMStorage(object):
             # file needs to be created
             self.initialize_data()
 
+        self.sanity_check()
+
     def initialize_data(self):
         """
         This method should be overridden in the sub-classes to generate the
         default data structure when a new file is created
+        """
+        pass
+
+    def sanity_check(self):
+        """
+        This method should be overridden in the sub-classes to verify and
+        adjust data that is loaded from the file when the object is initialized
         """
         pass
 
@@ -269,12 +278,14 @@ class OSPiMZones(OSPiMStorage):
     _zone_block = {
         "name": "",
         "status": 0,
-        "state_owner": "M"
+        "state_owner": "M",
+        "start_time": ""
     }
 
     # Default zone configuration, and the memory snapshot of the disk file
     _data = {
         "zone_count": 16,
+        "max_run": 3,
         "zone": [copy.copy(_zone_block)]
     }
 
@@ -282,6 +293,19 @@ class OSPiMZones(OSPiMStorage):
         """ Initialize zone blocks on new data structure """
 
         self.set_count(self._data['zone_count'])
+
+    def sanity_check(self):
+        """ Check the data structure loaded """
+
+        if 'max_run' not in self._data:
+            self._data['max_run'] = 3
+
+        for event in self._data['zone']:
+            if 'state_owner' not in event:
+                event['state_owner'] = ''
+
+            if 'start_time' not in self._data['zone']:
+                event['start_time'] =  str(datetime.datetime.now())
 
     def set_max_run(self, hours):
         """ Set the number of hours a zone can be turned on for """
