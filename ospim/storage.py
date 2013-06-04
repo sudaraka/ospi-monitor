@@ -257,6 +257,9 @@ class OSPiMSchedule(OSPiMStorage):
         sorted_events = sorted(data['events'].items(),
                                key=lambda k: k[1]['turn_on'])
 
+        server_time = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        data['server_time'] = server_time
+
         data['events'] = []
         for id, event in sorted_events:
             data['events'].append(event)
@@ -305,7 +308,7 @@ class OSPiMZones(OSPiMStorage):
                 event['state_owner'] = ''
 
             if 'start_time' not in self._data['zone']:
-                event['start_time'] =  str(datetime.datetime.now())
+                event['start_time'] = str(datetime.datetime.now())
 
     def set_max_run(self, hours):
         """ Set the number of hours a zone can be turned on for """

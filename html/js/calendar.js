@@ -51,7 +51,7 @@ populate_schedule_data = function() {
     $('#tbl_schedule tbody *').remove();
     $('#tbl_schedule thead').show();
 
-    var d = new Date();
+    var d = new Date(schedule_info.server_time);
     $('#span_date_time').text(
             (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear() +
             ' ' + format_time(d)
