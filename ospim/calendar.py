@@ -79,12 +79,6 @@ class GoogleCalender:
             start_time = self._iso_datetime_to_py(event['start']['dateTime'])
             end_time = self._iso_datetime_to_py(event['end']['dateTime'])
 
-            # Enforce maximum hour of running a zone rule
-            time_delta = datetime.timedelta(
-                hours=cache._zone._data['max_run'])
-            if time_delta < end_time - start_time:
-                continue
-
             if datetime.datetime.now() > end_time:
                 continue
 

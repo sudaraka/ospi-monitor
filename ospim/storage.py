@@ -410,14 +410,14 @@ class OSPiMZones(OSPiMStorage):
 
     def clear_long_running_zones(self):
         """
-        Iterate through the (running) zone list and turn them off if running
-        over the max_run hours
+        Iterate through the (running manually started) zone list and turn them
+        off if running over the max_run hours
         """
 
         data_changed = False
 
         for event in self._data['zone']:
-            if 1 == event['status']:
+            if 'M' == event['state_owner'] and 1 == event['status']:
                 start = datetime.datetime.strptime(
                     event['start_time'],
                     '%Y-%m-%d %H:%M:%S.%f'
