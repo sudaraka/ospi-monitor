@@ -242,9 +242,18 @@ class OSPiCalendarThread(threading.Thread):
         If the zone data changed, also send the new data to GPIO.
         """
 
-        for eid, e in self._schedule._data['events'].items():
+        just_turned_on = []
+        schedule_data = self._schedule.get_sorted()
+
+        for e in schedule_data['events']:
             #if 1 == e['running']:
+            if e['zone_id'] in just_turned_on:
+                continue
+
             self._zone.set_status(e['zone_id'], e['running'], 'S')
+
+            if 1 == e['running']:
+                just_turned_on.append(e['zone_id'])
 
         new_hash = hashlib.md5(json.dumps(self._zone._data))
 

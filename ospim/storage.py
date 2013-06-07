@@ -238,6 +238,24 @@ class OSPiMSchedule(OSPiMStorage):
         # Preserver changes by writing them back to the disk file
         self.write()
 
+    def get_sorted(self):
+        """ Return the schedule data structure sorted by event start time """
+
+        # Work on a separate copy of data
+        data = dict(self._data)
+
+        sorted_events = sorted(data['events'].items(),
+                               key=lambda k: k[1]['turn_on'])
+
+        server_time = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        data['server_time'] = server_time
+
+        data['events'] = []
+        for id, event in sorted_events:
+            data['events'].append(event)
+
+        return data
+
     def get_json(self, hash=None):
         """ Override parent class to sort by event start time """
 
@@ -250,19 +268,8 @@ class OSPiMSchedule(OSPiMStorage):
         if hash == data_hash:
             return json.dumps({'_data_hash': data_hash})
 
-        # Work on a separate copy of data
-        data = dict(self._data)
+        data = self.get_sorted()
         data['_data_hash'] = data_hash
-
-        sorted_events = sorted(data['events'].items(),
-                               key=lambda k: k[1]['turn_on'])
-
-        server_time = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-        data['server_time'] = server_time
-
-        data['events'] = []
-        for id, event in sorted_events:
-            data['events'].append(event)
 
         return json.dumps(data)
 
