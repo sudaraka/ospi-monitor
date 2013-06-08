@@ -246,14 +246,24 @@ class OSPiCalendarThread(threading.Thread):
         schedule_data = self._schedule.get_sorted()
 
         for e in schedule_data['events']:
-            #if 1 == e['running']:
+            # Already turned on in this loop
             if e['zone_id'] in just_turned_on:
                 continue
 
-            self._zone.set_status(e['zone_id'], e['running'], 'S')
-
             if 1 == e['running']:
                 just_turned_on.append(e['zone_id'])
+
+                if 0 == self._zone._data['zone'][e['zone_id']]['status'] and \
+                    'M' == \
+                        self._zone._data['zone'][e['zone_id']]['state_owner'] \
+                        and e['turn_on'] < \
+                        self._zone._data['zone'][e['zone_id']]['start_time'] \
+                        and e['turn_off'] > \
+                        self._zone._data['zone'][e['zone_id']]['start_time']:
+
+                    continue
+
+            self._zone.set_status(e['zone_id'], e['running'], 'S')
 
         new_hash = hashlib.md5(json.dumps(self._zone._data))
 

@@ -252,6 +252,7 @@ class OSPiMSchedule(OSPiMStorage):
 
         data['events'] = []
         for id, event in sorted_events:
+            event['event_id'] = id
             data['events'].append(event)
 
         return data
@@ -368,16 +369,15 @@ class OSPiMZones(OSPiMStorage):
         if 'state_owner' not in self._data['zone'][zone_id]:
             self._data['zone'][zone_id]['state_owner'] = owner
 
-        # Zone can only be turned off by the method that turned it on (state
-        # owner)
+        # Manually turned on zones can't be turned off by the calendar
         if 0 == status and \
                 'M' == self._data['zone'][zone_id]['state_owner'] and \
                 'S' == owner:
             return
 
-        # When turning the zone on set the start time to track maximum
-        # allowable run time.
-        if 1 == status and 0 == self._data['zone'][zone_id]['status']:
+        # When chanting the zone status on or off set the start time to track
+        # maximum allowable run time.
+        if status != self._data['zone'][zone_id]['status']:
             self._data['zone'][zone_id]['start_time'] = \
                 str(datetime.datetime.now())
 
