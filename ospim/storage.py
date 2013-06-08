@@ -315,8 +315,11 @@ class OSPiMZones(OSPiMStorage):
             if 'state_owner' not in event:
                 event['state_owner'] = ''
 
-            if 'start_time' not in self._data['zone']:
+            if 'start_time' not in event:
                 event['start_time'] = str(datetime.datetime.now())
+
+            if 'manual_off' not in event:
+                event['manual_off'] = 0
 
     def set_max_run(self, hours):
         """ Set the number of hours a zone can be turned on for """
@@ -380,6 +383,14 @@ class OSPiMZones(OSPiMStorage):
         if status != self._data['zone'][zone_id]['status']:
             self._data['zone'][zone_id]['start_time'] = \
                 str(datetime.datetime.now())
+
+        self._data['zone'][zone_id]['manual_off'] = 0
+
+        if 0 == status and \
+                1 == self._data['zone'][zone_id]['status'] and \
+                'S' == self._data['zone'][zone_id]['state_owner'] and \
+                'M' == owner:
+            self._data['zone'][zone_id]['manual_off'] = 1
 
         try:
             self._data['zone'][zone_id]['status'] = status

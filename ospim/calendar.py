@@ -254,8 +254,7 @@ class OSPiCalendarThread(threading.Thread):
                 just_turned_on.append(e['zone_id'])
 
                 if 0 == self._zone._data['zone'][e['zone_id']]['status'] and \
-                    'M' == \
-                        self._zone._data['zone'][e['zone_id']]['state_owner'] \
+                    1 == self._zone._data['zone'][e['zone_id']]['manual_off'] \
                         and e['turn_on'] < \
                         self._zone._data['zone'][e['zone_id']]['start_time'] \
                         and e['turn_off'] > \
