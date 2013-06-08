@@ -73,4 +73,4 @@ query_delay = 10
 #
 # Get you Google API ker from:
 #	https://code.google.com/apis/console#access
-api_key = AIzaSyCYQGG7bd3HhKyLm_UFPScf8q867LnhiY4
+api_key = enter_your_google_api_access_key_here
