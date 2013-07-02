@@ -1,34 +1,48 @@
-OpenSprinkler Pi Web Monitor/Control Interface
-==============================================
+OpenSprinkler Pi Monitor
+========================
 
 Based on the sample code from original OpenSprinkler Pi code base, this program
 provide more standardized web server and modern UI.
 
 **Objectives:**
 
-* Make the application more usable/usefull
+* Make the application more usable/useful
 * Integrate modern UI with mobile support
 * Combine manual and Google calendar controls int to one application
-* Package for Debian based distributions
 * Release under GPLv3 or later free software license
 
-Following sample codes will be used (as fork or influence) for the
-project under their respective license.
+**Influence**
 
-**OpenSprinkler Pi**
+Following sample codes were used (as an influence) for the project under their
+respective license.
 
-* https://github.com/rayshobby/opensprinkler
-*
 
-**A simple unix/linux daemon in Python**
+_OpenSprinkler Pi_
 
-* http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
-* Public Domain
+> https://github.com/rayshobby/opensprinkler
+>
+> By Ray <rayshobbyshop@gmail.com>
+>
+> License: CC-BY-SA
 
-Dependencies
-------------
+
+_A simple UNIX/Linux daemon in Python_
+
+> http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
+>
+> By Sander Marechal <s.marechal@jejik.com>
+>
+> License: Public Domain
+
+
+## Dependencies
 
 * Python v2.7
+* httplib2 v0.8
 * Bootstrap v2.3.1
 * jQuery v1.9.1
 
+
+## Known Issues
+
+* High CPU usage when fetching Google Calendar data
