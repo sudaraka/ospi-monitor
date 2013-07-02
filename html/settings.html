@@ -31,6 +31,7 @@
 
 					<ul class="nav pull-right">
 						<li class="active"><a href="#" title="Settings"><i class="icon-white icon-cog"></i> Settings</a></li>
+						<li><a href="#div-about" role="button" data-toggle="modal" title="About OpenSprinkler Pi - Monitor"><i class="icon-white icon-user"></i> About</a></li>
 					</ul>
 
 				</div>
@@ -40,7 +41,6 @@
 	</div>
 
 	<div class="container">
-
 
 			<fieldset>
 				<legend>Sprinkler Zones</legend>
@@ -93,8 +93,43 @@
 
 			</fieldset>
 
-
 	</div>
+
+    <div id="div-about" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="about-label" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+            <h3 id="about-label">OpenSprinkler Pi - Monitor</h3>
+        </div>
+        <div class="modal-body">
+            <p class="lead">Version 0.4 (beta)</p>
+            <p>Copyright 2013 <cite>Sudaraka Wijesinghe</cite>. &lt;<a href="http://sudaraka.org/contact" target="_new">http://sudaraka.org/contact/</a>&gt;<p>
+
+            <p>source code available at: <a href="http://git.sudaraka.org/opensprinkler/ospi-monitor/">http://git.sudaraka.org/opensprinkler/ospi-monitor/</a></p>
+
+            <hr />
+
+            <p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p>
+            <p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</p>
+            <p>You should have received a copy of the GNU General Public License along with this program.  If not, see &lt;<a href="http://www.gnu.org/licenses/" target="_new">http://www.gnu.org/licenses/</a>&gt;.</p>
+
+            <hr />
+
+            <h4>Upstreams &amp; Influences</h4>
+            <p>OpenSprinkler Pi - Monitor code and design was influenced by the following code samples and tutorials.</p>
+
+            <h5>OpenSprinkler Pi Sample Code</h5>
+            <p>By Ray &lt;rayshobbyshop [at] gmail [dot] com&gt;</p>
+            <p><small><strong>License: </strong> Creative Commons Attribution-ShareAlike</small></p>
+
+            <h5>A simple unix/linux daemon in Python</h5>
+            <p>By Sander Marechal &lt;s [dot] marechal [at] jejik [dot] com&gt;</p>
+            <p><small><strong>License: </strong> Public Domain</small></p>
+
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        </div>
+    </div>
 
 	<script type="text/javascript" language="JavaScript" src="js/jquery.js"></script>
 	<script type="text/javascript" language="JavaScript" src="js/bootstrap.js"></script>
